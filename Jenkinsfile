@@ -4,44 +4,56 @@ pipeline {
     environment {
         IMAGE_NAME = "fastapi-demo"
         CONTAINER_NAME = "fastapi-container"
+        PORT = "8000"
     }
 
     stages {
 
-        stage('Checkout Code') {
+        stage('Verify Docker') {
             steps {
-                git 'https://github.com/SkillsMetrix/fastapi-docker-app.git'
+                bat 'docker --version'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                echo "Building Docker Image..."
+                bat 'docker build -t %IMAGE_NAME% .'
             }
         }
 
-        stage('Stop Old Container') {
+        stage('Stop Existing Container') {
             steps {
-                sh '''
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
-                '''
+                echo "Stopping old container if running..."
+                bat 'docker stop %CONTAINER_NAME% || exit 0'
+                bat 'docker rm %CONTAINER_NAME% || exit 0'
             }
         }
 
         stage('Run Container') {
             steps {
-                sh '''
-                docker run -d -p 8000:8000 --name $CONTAINER_NAME $IMAGE_NAME
-                '''
+                echo "Starting FastAPI container..."
+                bat 'docker run -d -p %PORT%:8000 --name %CONTAINER_NAME% %IMAGE_NAME%'
             }
         }
 
+        stage('Verify Container') {
+            steps {
+                bat 'docker ps'
+            }
+        }
     }
 
     post {
+
         success {
             echo "FastAPI deployed successfully!"
+            echo "Access application: http://localhost:8000"
+            echo "Swagger docs: http://localhost:8000/docs"
+        }
+
+        failure {
+            echo "Pipeline failed. Check console logs."
         }
     }
 }
