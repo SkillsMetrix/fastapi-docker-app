@@ -4,4 +4,5 @@ app = FastAPI()
 
 @app.get("/")
 def home():
-    return {"message": "FastAPI running inside Docker via Jenkins"}
+
+    return {"message": "FastAPI running inside Docker via Jenkins again"}
